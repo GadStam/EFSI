@@ -8,7 +8,7 @@ git commit -m "Mensaje"
 
 git push origin main
 
-git remote set-url origin https://oauth2:token@github.com/SantiSiele/proyecto.git
+git remote set-url origin https://oauth2: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@github.com/AlanGarber/EFSI-01.git
 
 ## NPM
 Para crear el package.json ejecutamos npm init
