@@ -1,32 +1,91 @@
 const express = require("express");
 const app = express();
 const PORT = 3000;
-const CANT_NUMEROS = 4;
+let CANT_NUMEROS=15;
 let jugadores = [];
 let cartones = [];
 let contadorJugadores=0;
 let cartonesResta = [];
 let vecPelotas = [];
 let contadorCartones = 0;
-let cartonCopia; 
+let cartonCopia;
+let ganadores = 0;
+let decenas = []
 
-const crearCarton=()=>{
-    let carton=[];
-    let num;
-        for(let i=0;i<CANT_NUMEROS;i++){
-            num=Math.floor(Math.random() * 99);
-                for(let j; j<CANT_NUMEROS; j++){
-                    while(num===carton[j]){
-                        num=Math.floor(Math.random() * 99);
+function crearCarton() {
+        let contador1 = 0;
+        let contador2 = 0;
+        let arr = [
+            [], 
+            [], 
+            [], 
+            [], 
+            [], 
+            [], 
+            [], 
+            [], 
+            [], 
+            [] 
+        ];
+        
+        for(let i = 0; i < arr.length; i++) {
+            let min = (i * 10) + 1;
+            let max = min + 9;
+            let ok = Math.floor(Math.random() * (3 - 1)) + 1;
+            if(ok==1 && contador1<5){
+                contador1++;
+                ok=2;
+            }else if (ok==2 && contador2<5){
+                contador2++;
+                ok=1;
+            }
+                while(arr[i].length < ok) {
+                    let num = Math.floor(Math.random() * (max - min)) + min;
+                    if(!arr[i].includes(num)) {
+                        arr[i].push(num);
                     }
                 }
-            carton[i] = num;
+            arr[i].sort((a,b) => a - b);
         }
-        carton.sort((a, b) => a - b);
-        for(let i=0; i<100; i++){
-            vecPelotas[i]=0;
+        return arr;
+}
+
+function crearCartonEditado() {
+    let contador1 = 0;
+    let contador2 = 0;
+    let arr = [
+        [], 
+        [], 
+        [], 
+        [], 
+        [], 
+        [], 
+        [], 
+        [], 
+        [], 
+        [] 
+    ];
+    for(let i = 0; i<cant_numeros; i++){
+    let posicion = Math.floor(Math.random() * (10 - 1)) + 1;
+    let min = (posicion * 10) + 1;
+    let max = min + 9;
+    let ok = Math.floor(Math.random() * (3 - 1)) + 1;
+    if(ok==1 && contador1<5){
+        contador1++;
+        ok=2;
+    }else if (ok==2 && contador2<5){
+        contador2++;
+        ok=1;
+    }
+        while(arr[posicion].length < ok) {
+            let num = Math.floor(Math.random() * (max - min)) + min;
+            if(!arr[posicion].includes(num)) {
+                arr[posicion].push(num);
+            }
         }
-    return carton;
+        arr[posicion].sort((a,b) => a - b);
+    }
+    return arr;
 }
 
 const ObtenerBolilla = (vecPelotas)=>{
@@ -38,6 +97,45 @@ const ObtenerBolilla = (vecPelotas)=>{
     }
     vecPelotas[pelota] = vecPelotas[pelota] + 1;
     return pelota;
+}
+const Juego = () =>{
+    let cartonVer;
+    let numeroVer;
+    let jugadorVer;
+    let nombreVer;
+    pelota = ObtenerBolilla(vecPelotas);
+    for(let i = 0; i<contadorCartones; i++){
+        jugadorVer=jugadores[i];
+        if(jugadorVer==undefined){
+            cartonVer = cartonesResta[i]
+        }else{
+            cartonVer = jugadores[i].cartonResta
+        }
+        let sacados = 0;
+        for(let j = 0; j<10; j++){
+            for(let k = 0; k<10; k++){
+                numeroVer=cartonVer[j][k]
+                if(numeroVer == pelota){
+                    cartonesResta[i][j][k] = -1;
+                }
+                if(numeroVer == -1){
+                    sacados++;
+                }
+            }
+        }
+        if(sacados === cant_numeros){
+            nombreVer=jugadores[i];
+            if(nombreVer.nombre==undefined){
+                console.log(`Juego terminado, gano VACANTE`)
+            }else{
+                console.log(`Juego terminado, gano ${nombreVer.nombre}`)
+            }
+            ganadores++;
+        }
+    }
+    if(ganadores === 0){
+        console.log(`Salio la pelota ${pelota}`);
+    }
 }
 
 const process_data = () => {
@@ -67,17 +165,42 @@ app.post("/numero_aleatorio",function(req,res){
 });
 
 app.post("/iniciar_juego",function(req,res){
-    console.log(req.body);
-
-    for(let i=0;i<req.body.cartones;i++){
-        carton = crearCarton();
-        contadorCartones = contadorCartones + 1;
-        cartones.push(carton);
-        //cartonCopia = carton;
-        cartonCopia = [...carton]
-        cartonesResta.push(cartonCopia);
+    for(i=0; i<10; i++){
+        decenas[i]=0;
     }
-    res.send(cartones);
+    console.log(req.body);
+    cant_numeros = req.body.numeros;
+    if((cant_numeros<1) || (cant_numeros>20)){
+        res.send("No valido");
+    }else{
+        if(cant_numeros==15){
+            for(let i=0;i<req.body.cartones;i++){
+                carton = crearCarton();
+                contadorCartones = contadorCartones + 1;
+                cartones.push(carton);
+                //cartonCopia = carton;
+                cartonCopia = [...carton]
+                cartonesResta.push(cartonCopia);
+            }
+            for(let i = 0; i<100; i++){
+                vecPelotas[i] = 0;
+            }
+            res.send(cartones);
+        }else{
+            for(let i=0;i<req.body.cartones;i++){
+                carton = crearCartonEditado();
+                contadorCartones = contadorCartones + 1;
+                cartones.push(carton);
+                //cartonCopia = carton;
+                cartonCopia = [...carton]
+                cartonesResta.push(cartonCopia);
+            }
+            for(let i = 0; i<100; i++){
+                vecPelotas[i] = 0;
+            }
+            res.send(cartones);
+        }
+    }
     
 });
 
@@ -116,41 +239,13 @@ app.get(`/cartones/:Nombre?`,function(req,res){
 });
 
 app.get(`/sacar_numero`, function(req, res){
-    let cartonVer;
-    let numeroVer;
-    let jugadorVer;
-    let nombreVer;
-    let ganadores = 0;
-    pelota = ObtenerBolilla(vecPelotas);
-    for(let i = 0; i<contadorCartones; i++){
-        jugadorVer=jugadores[i];
-        if(jugadorVer==undefined){
-            cartonVer = cartonesResta[i]
-        }else{
-            cartonVer = jugadores[i].cartonResta
-        }
-        let sacados = 0;
-        for(let j = 0; j<CANT_NUMEROS; j++){
-            numeroVer=cartonVer[j]
-            if(numeroVer == pelota){
-                cartonesResta[i][j] = -1;
-            }
-            if(numeroVer == -1){
-                sacados++;
-            }
-        }
-        if(sacados === CANT_NUMEROS){
-            nombreVer=jugadores[i];
-            if(nombreVer.nombre==undefined){
-                console.log(`Juego terminado, gano VACANTE`)
-            }else{
-                console.log(`Juego terminado, gano ${nombreVer.nombre}`)
-            }
-            ganadores++;
-        }
-    }
-    if(ganadores === 0){
-        console.log(`Salio la pelota ${pelota}`);
+    Juego();
+    res.send("ok");  
+});
+
+app.get(`/juego_continuo`, function(req, res){
+    while(ganadores==0){
+        Juego();
     }
     res.send("ok");  
 });
@@ -164,5 +259,3 @@ app.listen(PORT, function(err){
 	if (err) console.log(err);
 	console.log("Server listening on PORT", PORT);
 });
-
-
